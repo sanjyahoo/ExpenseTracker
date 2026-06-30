@@ -85,12 +85,19 @@ class SettingsViewModel(
     fun importFromCsv(csvContent: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
+                // M3: Reject unreasonably large files before reading into memory
+                if (csvContent.length > 5_000_000) {
+                    onResult(false, "File too large to import (max 5 MB)")
+                    return@launch
+                }
+
                 val lines = csvContent.lines()
                 if (lines.size <= 1) {
                     onResult(false, "Empty or invalid CSV file")
                     return@launch
                 }
 
+                val allowedSources = setOf("MANUAL", "SMS", "NOTIFICATION")
                 var importCount = 0
                 // Skip header line
                 for (i in 1 until lines.size) {
@@ -104,7 +111,8 @@ class SettingsViewModel(
                         val category = tokens[2]
                         val merchant = tokens[3]
                         val timestamp = tokens[4].toLongOrNull() ?: System.currentTimeMillis()
-                        val source = tokens[5]
+                        // M3: Only allow known source values — reject anything else
+                        val source = if (tokens[5] in allowedSources) tokens[5] else "MANUAL"
                         val isVerified = tokens[6].toBoolean()
                         val note = if (tokens.size >= 8) tokens[7] else ""
 

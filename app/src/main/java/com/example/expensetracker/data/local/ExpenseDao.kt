@@ -49,7 +49,7 @@ interface ExpenseDao {
     @Query("DELETE FROM budgets WHERE category = :category")
     suspend fun deleteBudget(category: String)
 
-    @Query("SELECT * FROM expenses WHERE amount = :amount AND abs(timestamp - :timestamp) <= :timeWindowMs LIMIT 1")
+    @Query("SELECT * FROM expenses WHERE abs(amount - :amount) < 0.001 AND abs(timestamp - :timestamp) <= :timeWindowMs LIMIT 1")
     suspend fun findDuplicateExpense(amount: Double, timestamp: Long, timeWindowMs: Long): ExpenseEntity?
 
     @Query("DELETE FROM expenses")

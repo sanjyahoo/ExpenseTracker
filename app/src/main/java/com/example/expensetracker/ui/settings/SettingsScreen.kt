@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.expensetracker.BuildConfig
 import com.example.expensetracker.data.ExpenseRepository
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -48,6 +49,29 @@ fun SettingsScreen(
                 Toast.makeText(context, "Failed to read CSV file: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // M2: Confirmation dialog state for destructive Clear All Data action
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
+    if (showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmDialog = false },
+            title = { Text("Clear All Data?") },
+            text = { Text("This will permanently delete all transactions and budgets. This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearConfirmDialog = false
+                        viewModel.clearAllData { _, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) { Text("Delete Everything", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirmDialog = false }) { Text("Cancel") }
+            }
+        )
     }
 
     Scaffold(
@@ -226,42 +250,40 @@ fun SettingsScreen(
                 }
             }
 
-            // Developer Testing Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f))
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(text = "Developer Testing & Debugging", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.tertiary)
-                    Text(text = "Quickly seed mock expenses and budgets to inspect chart UI, or wipe the local database clean.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Developer Testing Card — only visible in debug builds (L1)
+            if (BuildConfig.DEBUG) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.2f))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(text = "Developer Testing & Debugging", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.tertiary)
+                        Text(text = "Quickly seed mock expenses and budgets to inspect chart UI, or wipe the local database clean.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                viewModel.seedDummyData { success, message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text("Seed Mock Data")
-                        }
+                            Button(
+                                onClick = {
+                                    viewModel.seedDummyData { success, message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Seed Mock Data")
+                            }
 
-                        Button(
-                            onClick = {
-                                viewModel.clearAllData { success, message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Clear All Data")
+                            Button(
+                                onClick = { showClearConfirmDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Clear All Data")
+                            }
                         }
                     }
                 }

@@ -10,6 +10,7 @@ import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.expensetracker.BuildConfig
 import com.example.expensetracker.MainActivity
 import com.example.expensetracker.data.ExpenseRepository
 import com.example.expensetracker.data.local.ExpenseEntity
@@ -24,6 +25,10 @@ class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != "android.provider.Telephony.SMS_RECEIVED") return
 
+        // Respect the user's SMS auto-capture toggle
+        val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("sms_capture", true)) return
+
         val bundle = intent.extras ?: return
         try {
             val pdus = bundle.get("pdus") as? Array<*> ?: return
@@ -34,7 +39,10 @@ class SmsReceiver : BroadcastReceiver() {
                 val body = message.messageBody ?: continue
                 val sender = message.originatingAddress ?: "Unknown"
 
-                Log.d("SmsReceiver", "SMS Received from $sender: $body")
+                // Only log in debug builds — SMS may contain OTPs and account details
+                if (BuildConfig.DEBUG) {
+                    Log.d("SmsReceiver", "SMS Received from $sender")
+                }
                 processSms(context, sender, body)
             }
         } catch (e: Exception) {

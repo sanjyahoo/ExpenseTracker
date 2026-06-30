@@ -5,6 +5,7 @@ import android.content.Context
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import com.example.expensetracker.BuildConfig
 import com.example.expensetracker.data.ExpenseRepository
 import com.example.expensetracker.data.local.ExpenseEntity
 import com.example.expensetracker.receiver.SmsReceiver
@@ -20,13 +21,20 @@ class PayNotificationListener : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        // Respect the user's notification auto-capture toggle
+        val prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("notification_capture", true)) return
+
         val packageName = sbn.packageName ?: ""
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
         val title = extras.getString(Notification.EXTRA_TITLE) ?: ""
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: ""
 
-        Log.d("PayNotificationListener", "Notification from $packageName: Title: $title, Text: $text")
+        // Only log in debug builds — notification text may contain financial details
+        if (BuildConfig.DEBUG) {
+            Log.d("PayNotificationListener", "Notification from $packageName")
+        }
 
         // Filter and check if this notification is transaction related
         if (isPaymentAppOrKeyword(packageName, title, text)) {
@@ -54,7 +62,9 @@ class PayNotificationListener : NotificationListenerService() {
                         note = note
                     )
                     repository.insertExpense(expense)
-                    Log.d("PayNotificationListener", "Successfully logged transaction of $signedAmount from notification")
+                    if (BuildConfig.DEBUG) {
+                        Log.d("PayNotificationListener", "Transaction logged from notification")
+                    }
                 }
             }
         }

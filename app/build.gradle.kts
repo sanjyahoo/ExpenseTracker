@@ -29,7 +29,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 
@@ -88,6 +88,10 @@ dependencies {
   implementation(libs.androidx.room.runtime)
   implementation(libs.androidx.room.ktx)
   kapt(libs.androidx.room.compiler)
+
+  // SQLCipher — encrypted Room database
+  implementation(libs.sqlcipher)
+  implementation(libs.androidx.sqlite)
 
   // Biometric Auth
   implementation(libs.androidx.biometric)

@@ -28,7 +28,7 @@ class ExpenseRepository(context: Context) {
     }
 
     suspend fun insertExpense(expense: ExpenseEntity): Long {
-        if (expense.source == "sms" || expense.source == "notification") {
+        if (expense.source == "SMS" || expense.source == "NOTIFICATION") {
             val duplicate = expenseDao.findDuplicateExpense(expense.amount, expense.timestamp, 180000)
             if (duplicate != null) {
                 return duplicate.id
