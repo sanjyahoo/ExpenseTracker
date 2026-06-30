@@ -1,0 +1,26 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Kotlin compiler daemon temp files
+kotlin-compiler-client-*-is-running
+kotlin-compiler-in-*-*.alive
+
+# JNA (Java Native Access) extracted native libraries
+jna-*/
+jna--*/
+
+# SQLite JDBC extracted native DLL
+sqlitejdbc.dll
